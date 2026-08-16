@@ -635,74 +635,106 @@ def plot_bar_h(
 # =========================================================
 # UI & AUTHENTICATION HELPERS
 # =========================================================
-def inject_custom_css() -> None:
-    st.markdown(
-        """
-        <style>
-            /* Zoom out the entire app to 80% */
-            html, body, .stApp {
-                zoom: 0.8;
-                -moz-transform: scale(0.8);
-                -moz-transform-origin: 0 0;
-            }
-            
-            .block-container { padding-top: 2rem; padding-bottom: 2rem; }
-            h1, h2, h3 { color: #1F4E79; }
-            .stMetric { background:#F8FAFC; border:1px solid #E2E8F0;
-                        border-radius:8px; padding:12px; }
-            .stMetric > label { color:#475569; font-weight:600; }
-            .stDownloadButton > button { background:#1F4E79; color:white;
-                        border:none; border-radius:6px; font-weight:600; }
-            .stDownloadButton > button:hover { background:#163a5a; color:white; }
-            
-            /* Login Card Styling */
-            .login-header {
-                text-align: center;
-                margin-bottom: 24px;
-            }
-            .login-icon {
-                font-size: 48px;
-                margin-bottom: 0px;
-            }
-            .login-title {
-                color: #1F2937;
-                font-size: 28px;
-                font-weight: 700;
-                margin-top: 8px;
-                margin-bottom: 4px;
-            }
-            .login-subtitle {
-                color: #6B7280;
-                font-size: 15px;
-            }
-            
-            /* Red Login Button */
-            .red-login-btn > button {
-                background-color: #EF4444 !important;
-                color: white !important;
-                border: none !important;
-                border-radius: 8px !important;
-                font-weight: 600 !important;
-                height: 45px !important;
-                font-size: 16px !important;
-                width: 100% !important;
-                transition: background-color 0.2s !important;
-            }
-            .red-login-btn > button:hover {
-                background-color: #DC2626 !important;
-                color: white !important;
-            }
+def inject_custom_css(is_logged_in: bool) -> None:
+    base_css = """
+    <style>
+        .block-container { padding-top: 2rem; padding-bottom: 2rem; }
+        h1, h2, h3 { color: #1F4E79; }
+        .stMetric { background:#F8FAFC; border:1px solid #E2E8F0;
+                    border-radius:8px; padding:12px; }
+        .stMetric > label { color:#475569; font-weight:600; }
+        .stDownloadButton > button { background:#1F4E79; color:white;
+                    border:none; border-radius:6px; font-weight:600; }
+        .stDownloadButton > button:hover { background:#163a5a; color:white; }
+        
+        /* Make Sign In Button Red */
+        .red-login-btn button {
+            background-color: #EF4444 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            height: 48px !important;
+            font-size: 16px !important;
+            width: 100% !important;
+            transition: background-color 0.2s !important;
+            margin-top: 10px !important;
+        }
+        .red-login-btn button:hover {
+            background-color: #DC2626 !important;
+            color: white !important;
+        }
 
-            /* Hide Streamlit default chrome when on login */
-            [data-testid="stSidebar"] { display: none; }
-            [data-testid="stSidebarCollapsedControl"] { display: none; }
-            #MainMenu { visibility: hidden; }
-            footer { visibility: hidden; }
-            header { visibility: hidden; }
+        /* Login container styling */
+        .login-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .login-icon {
+            font-size: 56px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .login-title {
+            color: #1F2937;
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .login-subtitle {
+            color: #6B7280;
+            font-size: 15px;
+            margin-bottom: 0;
+        }
+        
+        /* Input fields styling */
+        .stTextInput input {
+            border-radius: 6px !important;
+            border: 1px solid #D1D5DB !important;
+            padding: 10px 12px !important;
+            height: 44px !important;
+        }
+        .stTextInput input:focus {
+            border-color: #1F4E79 !important;
+            box-shadow: 0 0 0 1px #1F4E79 !important;
+        }
+    </style>
+    """
+    
+    if not is_logged_in:
+        login_css = """
+        <style>
+            /* Hide Streamlit default UI elements for a clean login screen */
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            .stAppDeployHeader {display: none;}
+            [data-testid="stHeader"] {display: none;}
+            section[data-testid="stSidebar"] {display: none;}
+            div[data-testid="collapsedControl"] {display: none;}
+            
+            /* Vertically center the login container */
+            [data-testid="stAppViewContainer"] > .main .block-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+            
+            /* Add a subtle gradient background to the login page */
+            [data-testid="stAppViewContainer"] {
+                background: radial-gradient(circle at top right, rgba(31, 78, 121, 0.05), transparent),
+                            radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent);
+            }
         </style>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+        st.markdown(base_css + login_css, unsafe_allow_html=True)
+    else:
+        st.markdown(base_css, unsafe_allow_html=True)
 
 
 def render_empty_state() -> None:
@@ -819,53 +851,41 @@ def render_analytics_tab(
 def render_login_page() -> bool:
     """Renders the styled login screen and returns True if authenticated."""
     
-    # Use native Streamlit columns to perfectly center the card
-    col1, col2, col3 = st.columns([1, 1.5, 1])
+    # Use columns to constrain the width of the login card perfectly
+    col1, col2, col3 = st.columns([1.5, 1, 1.5])
     
     with col2:
-        # Use a bordered container to act as the clean card
         with st.container(border=True):
-            # Inject HTML for exact header styling
             st.markdown("""
             <div class="login-header">
-                <div class="login-icon">📊</div>
+                <span class="login-icon">📊</span>
                 <div class="login-title">Welcome Back</div>
                 <div class="login-subtitle">Sign in to access the DTI Analysis Engine</div>
             </div>
             """, unsafe_allow_html=True)
             
-            # Input fields
-            username = st.text_input("Username", placeholder="Enter your username", label_visibility="collapsed")
-            
-            # Password field with show/hide toggle
-            pass_col1, pass_col2 = st.columns([4, 1])
-            with pass_col1:
-                show_pass = st.session_state.get("show_pass_login", False)
-                pass_type = "default" if show_pass else "password"
-                password = st.text_input("Password", placeholder="Enter your password", type=pass_type, label_visibility="collapsed", key="login_pass_val")
-            with pass_col2:
-                st.write("")
-                st.checkbox("👁", key="show_pass_login", help="Show password")
+            with st.form("login_form"):
+                username = st.text_input("Username", placeholder="Enter your username")
+                password = st.text_input("Password", placeholder="Enter your password", type="password")
                 
-            # Custom wrapper to identify the button via CSS to make it RED
-            st.markdown('<div class="red-login-btn">', unsafe_allow_html=True)
-            login_clicked = st.button("Sign In", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            if login_clicked:
-                try:
-                    valid_user = st.secrets["auth"]["username"]
-                    valid_pass = st.secrets["auth"]["password"]
-                except (KeyError, AttributeError):
-                    st.error("Server authentication not configured.")
-                    return False
-
-                if username == valid_user and password == valid_pass:
-                    st.session_state["logged_in"] = True
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password.")
-                    
+                st.markdown('<div class="red-login-btn">', unsafe_allow_html=True)
+                login_clicked = st.form_submit_button("Sign In", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                if login_clicked:
+                    try:
+                        valid_user = st.secrets["auth"]["username"]
+                        valid_pass = st.secrets["auth"]["password"]
+                    except (KeyError, AttributeError):
+                        st.error("Authentication secrets are not configured properly on the server.")
+                        return False
+                        
+                    if username == valid_user and password == valid_pass:
+                        st.session_state["logged_in"] = True
+                        st.rerun()
+                    else:
+                        st.error("Invalid username or password. Please try again.")
+                        
     return False
 
 
@@ -873,10 +893,11 @@ def render_login_page() -> bool:
 # MAIN APP
 # =========================================================
 def main() -> None:
-    inject_custom_css()
+    is_logged_in = st.session_state.get("logged_in", False)
+    inject_custom_css(is_logged_in)
 
     # Authentication Gate
-    if not st.session_state.get("logged_in", False):
+    if not is_logged_in:
         render_login_page()
         return
 
