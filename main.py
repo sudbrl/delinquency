@@ -156,7 +156,7 @@ def is_missing_month_value(v: Any) -> bool:
 
 
 # =========================================================
-# CRITERIA PARSING (logic preserved exactly)
+# CRITERIA PARSING
 # =========================================================
 def try_parse_criteria(criteria_str: str) -> ParsedCriteria:
     s = str(criteria_str).strip().replace(chr(160), "").replace(" ", "")
@@ -249,7 +249,7 @@ def is_numeric_string(v: Any) -> bool:
 
 
 # =========================================================
-# CORE ANALYSIS (calculation logic preserved exactly)
+# CORE ANALYSIS
 # =========================================================
 def run_analysis(
     df: pd.DataFrame,
@@ -419,7 +419,7 @@ def run_analysis(
 
 
 # =========================================================
-# EXCEL FORMATTING (logic preserved exactly)
+# EXCEL FORMATTING
 # =========================================================
 def clean_for_excel(
     df: pd.DataFrame,
@@ -636,18 +636,18 @@ def plot_bar_h(
 # UI & AUTHENTICATION HELPERS
 # =========================================================
 def inject_custom_css(is_logged_in: bool) -> None:
+    """Injects custom CSS into the Streamlit app."""
+    
+    # Base CSS (applies everywhere)
     base_css = """
     <style>
         .block-container { padding-top: 2rem; padding-bottom: 2rem; }
         h1, h2, h3 { color: #1F4E79; }
-        .stMetric { background:#F8FAFC; border:1px solid #E2E8F0;
-                    border-radius:8px; padding:12px; }
+        .stMetric { background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:12px; }
         .stMetric > label { color:#475569; font-weight:600; }
-        .stDownloadButton > button { background:#1F4E79; color:white;
-                    border:none; border-radius:6px; font-weight:600; }
+        .stDownloadButton > button { background:#1F4E79; color:white; border:none; border-radius:6px; font-weight:600; }
         .stDownloadButton > button:hover { background:#163a5a; color:white; }
         
-        /* Make Sign In Button Red */
         .red-login-btn button {
             background-color: #EF4444 !important;
             color: white !important;
@@ -665,30 +665,11 @@ def inject_custom_css(is_logged_in: bool) -> None:
             color: white !important;
         }
 
-        /* Login container styling */
-        .login-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .login-icon {
-            font-size: 56px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        .login-title {
-            color: #1F2937;
-            font-size: 28px;
-            font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 8px;
-        }
-        .login-subtitle {
-            color: #6B7280;
-            font-size: 15px;
-            margin-bottom: 0;
-        }
+        .login-header { text-align: center; margin-bottom: 24px; }
+        .login-icon { font-size: 56px; margin-bottom: 8px; display: block; }
+        .login-title { color: #1F2937; font-size: 28px; font-weight: 700; margin-top: 0; margin-bottom: 8px; }
+        .login-subtitle { color: #6B7280; font-size: 15px; margin-bottom: 0; }
         
-        /* Input fields styling */
         .stTextInput input {
             border-radius: 6px !important;
             border: 1px solid #D1D5DB !important;
@@ -702,39 +683,36 @@ def inject_custom_css(is_logged_in: bool) -> None:
     </style>
     """
     
+    # Login-specific CSS (hides Streamlit UI, centers content)
+    login_css = ""
     if not is_logged_in:
         login_css = """
-        <style>
-            /* Hide Streamlit default UI elements for a clean login screen */
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            .stAppDeployHeader {display: none;}
-            [data-testid="stHeader"] {display: none;}
-            section[data-testid="stSidebar"] {display: none;}
-            div[data-testid="collapsedControl"] {display: none;}
-            
-            /* Vertically center the login container */
-            [data-testid="stAppViewContainer"] > .main .block-container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-            }
-            
-            /* Add a subtle gradient background to the login page */
-            [data-testid="stAppViewContainer"] {
-                background: radial-gradient(circle at top right, rgba(31, 78, 121, 0.05), transparent),
-                            radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent);
-            }
-        </style>
-        """
-        st.markdown(base_css + login_css, unsafe_allow_html=True)
-    else:
-        st.markdown(base_css, unsafe_allow_html=True)
+    <style>
+        /* Hide Streamlit default UI elements */
+        #MainMenu, footer, header {visibility: hidden;}
+        .stAppDeployHeader, [data-testid="stHeader"], section[data-testid="stSidebar"], div[data-testid="collapsedControl"] {display: none;}
+        
+        /* Vertically center the login container */
+        [data-testid="stAppViewContainer"] > .main .block-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        
+        /* Subtle gradient background */
+        [data-testid="stAppViewContainer"] {
+            background: radial-gradient(circle at top right, rgba(31, 78, 121, 0.05), transparent),
+                        radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent);
+        }
+    </style>
+    """
+    
+    # Inject safely using unsafe_allow_html=True
+    st.markdown(base_css + login_css, unsafe_allow_html=True)
 
 
 def render_empty_state() -> None:
@@ -823,370 +801,3 @@ def render_analytics_tab(
 
     # Ac Type chart
     df_ac_plot = df_ac_type[df_ac_type["Ac Type Desc"] != "Grand Total"].copy()
-    if len(df_ac_plot) > 0:
-        df_ac_plot["Total Accounts"] = (
-            df_ac_plot["Ac Type Desc"]
-            .map(ac_type_total_count).fillna(0).astype(int)
-        )
-        df_ac_plot["% Share"] = (
-            df_ac_plot["No. of Zero Accounts"] /
-            df_ac_plot["Total Accounts"] * 100
-        ).replace([np.inf, -np.inf], 0).fillna(0)
-
-        st.markdown("#### 📑 Account Type Analytics")
-        st.markdown(f"**Top 10 Account Types by % Share — {cond_label}**")
-
-        df_plot = df_ac_plot.sort_values("% Share", ascending=False).head(10)
-        df_plot = df_plot.sort_values("% Share", ascending=True)
-        fig = plot_bar_h(
-            df_plot, "% Share", "Ac Type Desc",
-            f"Top 10 Account Types by % Share ({cond_label})",
-            color=AppConstants.PRIMARY_COLOR,
-        )
-        st.pyplot(fig, use_container_width=True)
-    else:
-        st.info("No account type chart data available.")
-
-
-def render_login_page() -> bool:
-    """Renders the styled login screen and returns True if authenticated."""
-    
-    # Use columns to constrain the width of the login card perfectly
-    col1, col2, col3 = st.columns([1.5, 1, 1.5])
-    
-    with col2:
-        with st.container(border=True):
-            st.markdown("""
-            <div class="login-header">
-                <span class="login-icon">📊</span>
-                <div class="login-title">Welcome Back</div>
-                <div class="login-subtitle">Sign in to access the DTI Analysis Engine</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            with st.form("login_form"):
-                username = st.text_input("Username", placeholder="Enter your username")
-                password = st.text_input("Password", placeholder="Enter your password", type="password")
-                
-                st.markdown('<div class="red-login-btn">', unsafe_allow_html=True)
-                login_clicked = st.form_submit_button("Sign In", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                if login_clicked:
-                    try:
-                        valid_user = st.secrets["auth"]["username"]
-                        valid_pass = st.secrets["auth"]["password"]
-                    except (KeyError, AttributeError):
-                        st.error("Authentication secrets are not configured properly on the server.")
-                        return False
-                        
-                    if username == valid_user and password == valid_pass:
-                        st.session_state["logged_in"] = True
-                        st.rerun()
-                    else:
-                        st.error("Invalid username or password. Please try again.")
-                        
-    return False
-
-
-# =========================================================
-# MAIN APP
-# =========================================================
-def main() -> None:
-    is_logged_in = st.session_state.get("logged_in", False)
-    inject_custom_css(is_logged_in)
-
-    # Authentication Gate
-    if not is_logged_in:
-        render_login_page()
-        return
-
-    # Main App Content
-    st.title(AppConstants.APP_TITLE)
-    st.markdown(AppConstants.APP_SUBTITLE)
-
-    # ---------------------------------------------------------
-    # SIDEBAR
-    # ---------------------------------------------------------
-    with st.sidebar:
-        st.header("⚙️ Configuration")
-        
-        # Logout Button at top of sidebar
-        if st.button("🚪 Logout", use_container_width=True):
-            st.session_state["logged_in"] = False
-            st.rerun()
-            
-        st.markdown("---")
-
-        uploaded_file = st.file_uploader(
-            "📁 Upload Excel File", type=["xlsx", "xls", "xlsm"], key="file_uploader"
-        )
-
-        df_preview = None
-        month_cols_preview: List[str] = []
-        if uploaded_file is not None:
-            try:
-                df_preview = load_data(uploaded_file.getvalue())
-                month_cols_preview = detect_month_columns(df_preview)
-            except Exception:
-                month_cols_preview = []
-
-        st.markdown("---")
-        st.subheader("📅 Month Scope")
-        month_scope = st.radio(
-            "Apply condition to:",
-            options=list(AppConstants.MONTH_SCOPE_OPTIONS),
-            index=0,
-            help="Select which month columns the condition should evaluate.",
-        )
-
-        from_month = to_month = None
-        if month_scope == "Month Range":
-            if month_cols_preview:
-                c1, c2 = st.columns(2)
-                from_month = c1.selectbox(
-                    "From", options=month_cols_preview, index=0, key="from_m"
-                )
-                to_month = c2.selectbox(
-                    "To",
-                    options=month_cols_preview,
-                    index=len(month_cols_preview) - 1,
-                    key="to_m",
-                )
-            else:
-                st.warning("No month columns detected yet.")
-        elif month_scope == "Last 12 Months":
-            if month_cols_preview:
-                st.caption(
-                    f"Will use last 12 of {len(month_cols_preview)} detected month columns."
-                )
-            else:
-                st.warning("No month columns detected yet.")
-
-        st.markdown("---")
-        month_criteria = st.text_input(
-            "🎯 Month Condition",
-            value=AppConstants.DEFAULT_CRITERIA,
-            help="Examples: =0, >30, <90, >30<90, >=30<=90, <>0",
-        )
-        st.markdown("""
-        **Condition Examples:**
-        - `=0` — All months equal 0 (#N/A ignored)
-        - `>30` — All months > 30
-        - `<90` — All months < 90
-        - `>30<90` — Between 30 and 90
-        - `<>0` — Not equal to 0
-        """)
-
-    # ---------------------------------------------------------
-    # EMPTY STATE
-    # ---------------------------------------------------------
-    if uploaded_file is None:
-        render_empty_state()
-        return
-
-    # ---------------------------------------------------------
-    # PARSE CRITERIA
-    # ---------------------------------------------------------
-    criteria = try_parse_criteria(month_criteria)
-    if not criteria.is_valid:
-        st.error(
-            "❌ The month condition is not valid. "
-            "Use examples such as: =0, >30, <90, >30<90, >=30<=90."
-        )
-        return
-
-    # ---------------------------------------------------------
-    # READ FILE
-    # ---------------------------------------------------------
-    try:
-        with st.spinner("📖 Reading Excel file..."):
-            df = load_data(uploaded_file.getvalue())
-    except Exception as e:
-        logger.exception("Failed to read uploaded file.")
-        st.error(f"❌ Error reading file: {e}")
-        return
-
-    if df.empty:
-        st.error("❌ No data found in the uploaded file.")
-        return
-
-    # ---------------------------------------------------------
-    # FIND COLUMNS
-    # ---------------------------------------------------------
-    col_balance = find_header_column(df, "Balance")
-    col_branch = find_header_column(df, "Branch Name")
-    col_ac_type = find_header_column(df, "Ac Type Desc")
-    col_main_code = find_header_column(df, "Main Code")
-
-    missing = [c for c in AppConstants.REQUIRED_COLUMNS
-               if find_header_column(df, c) is None]
-    if missing:
-        st.error(f"❌ Required columns not found: {', '.join(missing)}")
-        st.info(f"Available columns: {list(df.columns)}")
-        return
-
-    text_columns_for_excel = [col_main_code] if col_main_code else []
-
-    all_month_cols = detect_month_columns(df)
-    if not all_month_cols:
-        st.error("❌ No month columns were found in Row 1.")
-        return
-
-    # ---------------------------------------------------------
-    # RESOLVE MONTH SCOPE
-    # ---------------------------------------------------------
-    if month_scope == "Month Range" and (from_month is None or to_month is None):
-        st.error("❌ Please select both From and To months.")
-        return
-    if month_scope == "Month Range":
-        idx_from = all_month_cols.index(from_month)
-        idx_to = all_month_cols.index(to_month)
-        if idx_from > idx_to:
-            st.error(
-                "❌ 'From Month' must come before or equal to 'To Month' in the sheet order."
-            )
-            return
-
-    month_cols, drop_month_cols = resolve_month_cols(
-        all_month_cols, month_scope, from_month, to_month,
-    )
-
-    if month_scope == "Last 12 Months" and len(all_month_cols) < 12:
-        st.warning(
-            f"⚠️ Only {len(all_month_cols)} month column(s) found; using all of them."
-        )
-
-    st.success(
-        f"✅ Evaluating **{len(month_cols)}** month column(s) under scope: **{month_scope}**"
-    )
-    if len(month_cols) <= 12:
-        st.caption(f"Columns: {', '.join(str(c) for c in month_cols)}")
-
-    # ---------------------------------------------------------
-    # BUILD CONTEXT
-    # ---------------------------------------------------------
-    ctx = AnalysisContext(
-        month_scope=month_scope,
-        from_month=from_month,
-        to_month=to_month,
-        criteria_raw=month_criteria,
-        criteria=criteria,
-        month_cols=month_cols,
-        all_month_cols=all_month_cols,
-        drop_month_cols=drop_month_cols,
-    )
-
-    # ---------------------------------------------------------
-    # METRICS BAR
-    # ---------------------------------------------------------
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("📊 Total Rows", f"{len(df):,}")
-    c2.metric("📅 Month Columns (Total)", len(all_month_cols))
-    c3.metric("🎯 Active Month Cols", len(month_cols))
-    c4.metric("🔍 Condition", month_criteria)
-    st.markdown("---")
-
-    # ---------------------------------------------------------
-    # RUN ANALYSIS
-    # ---------------------------------------------------------
-    try:
-        with st.spinner("🔍 Analyzing data..."):
-            result = run_analysis(
-                df, ctx, col_balance, col_branch, col_ac_type, col_main_code,
-            )
-    except Exception as e:
-        logger.exception("Analysis failed.")
-        st.error(f"❌ Analysis failed: {e}")
-        return
-
-    # ---------------------------------------------------------
-    # RESULT METRICS
-    # ---------------------------------------------------------
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("✅ Accounts Found", f"{len(result.df_zero):,}")
-    m2.metric("📋 Total Loan Accounts", f"{result.total_loan_account_count:,}")
-    m3.metric("💰 Total Loan Balance", f"{result.total_loan_balance:,.2f}")
-    m4.metric("📊 Output Sheets", "3")
-    st.markdown("---")
-
-    cond_label = month_criteria.strip()
-
-    # ---------------------------------------------------------
-    # TABS
-    # ---------------------------------------------------------
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🎯 Matching Accounts",
-        "🏦 Branch Summary",
-        "📑 Ac Type Summary",
-        "📈 Analytics",
-    ])
-
-    with tab1:
-        st.subheader(
-            f"Matching Accounts ({len(result.df_zero):,} rows) — Condition: {cond_label}"
-        )
-        if len(result.df_zero) > 0:
-            st.dataframe(result.df_zero, use_container_width=True, height=600)
-        else:
-            st.info("No accounts matched the given condition.")
-
-    with tab2:
-        st.subheader("Branch Summary")
-        if len(result.df_branch) > 0:
-            st.dataframe(result.df_branch, use_container_width=True, height=500)
-        else:
-            st.info("No summary data available.")
-
-    with tab3:
-        st.subheader("Ac Type Summary")
-        if len(result.df_ac_type) > 0:
-            st.dataframe(result.df_ac_type, use_container_width=True, height=500)
-        else:
-            st.info("No summary data available.")
-
-    with tab4:
-        render_analytics_tab(
-            result.df_branch,
-            result.df_ac_type,
-            result.branch_total_count,
-            result.ac_type_total_count,
-            cond_label,
-        )
-
-    # ---------------------------------------------------------
-    # DOWNLOAD
-    # ---------------------------------------------------------
-    st.markdown("---")
-    st.subheader("📥 Download Results")
-
-    try:
-        excel_bytes = build_excel_output(result, text_cols=text_columns_for_excel)
-    except Exception as e:
-        logger.exception("Excel generation failed.")
-        st.error(f"❌ Excel generation failed: {e}")
-        return
-
-    col_dl1, _ = st.columns([1, 3])
-    with col_dl1:
-        st.download_button(
-            label="📥 Download Excel Output",
-            data=excel_bytes,
-            file_name=(
-                f"Month_Analysis_"
-                f"{month_criteria.replace(' ', '_')}_"
-                f"{month_scope.replace(' ', '_')}.xlsx"
-            ),
-            mime=AppConstants.XLSX_MIME,
-            use_container_width=True,
-        )
-
-    st.success("✅ Analysis complete! Download the Excel file above.")
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        logger.exception("Unhandled exception in main.")
-        st.error("An unexpected error occurred. Please check the logs and try again.")
