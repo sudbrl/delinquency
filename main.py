@@ -1,15 +1,3 @@
-"""
-Month Condition Analyzer
-========================
-Industry-grade Streamlit application for analyzing loan-account data
-against a user-defined month condition.
-
-Calculation logic, parsing logic, aggregation logic, and Excel output
-structure are preserved exactly from the original implementation; only
-the surrounding engineering (structure, typing, logging, validation,
-error handling, styling, performance, UX) has been upgraded.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -39,7 +27,7 @@ logger = logging.getLogger("month_analyzer")
 # PAGE CONFIG
 # =========================================================
 st.set_page_config(
-    page_title="Month Condition Analyzer",
+    page_title="DTI Analysis Engine",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -168,7 +156,7 @@ def is_missing_month_value(v: Any) -> bool:
 
 
 # =========================================================
-# CRITERIA PARSING  (logic preserved exactly)
+# CRITERIA PARSING (logic preserved exactly)
 # =========================================================
 def try_parse_criteria(criteria_str: str) -> ParsedCriteria:
     s = str(criteria_str).strip().replace(chr(160), "").replace(" ", "")
@@ -261,7 +249,7 @@ def is_numeric_string(v: Any) -> bool:
 
 
 # =========================================================
-# CORE ANALYSIS  (calculation logic preserved exactly)
+# CORE ANALYSIS (calculation logic preserved exactly)
 # =========================================================
 def run_analysis(
     df: pd.DataFrame,
@@ -431,7 +419,7 @@ def run_analysis(
 
 
 # =========================================================
-# EXCEL FORMATTING  (logic preserved exactly)
+# EXCEL FORMATTING (logic preserved exactly)
 # =========================================================
 def clean_for_excel(
     df: pd.DataFrame,
@@ -645,7 +633,7 @@ def plot_bar_h(
 
 
 # =========================================================
-# UI HELPERS
+# UI & AUTHENTICATION HELPERS
 # =========================================================
 def inject_custom_css() -> None:
     st.markdown(
@@ -659,6 +647,48 @@ def inject_custom_css() -> None:
             .stDownloadButton > button { background:#1F4E79; color:white;
                         border:none; border-radius:6px; font-weight:600; }
             .stDownloadButton > button:hover { background:#163a5a; color:white; }
+            
+            /* Make Sign In Button Red */
+            .red-login-btn > button {
+                background-color: #EF4444 !important;
+                color: white !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                height: 45px !important;
+                font-size: 16px !important;
+                width: 100% !important;
+                transition: background-color 0.2s !important;
+            }
+            .red-login-btn > button:hover {
+                background-color: #DC2626 !important;
+                color: white !important;
+            }
+
+            /* Hide sidebar/footer on login */
+            [data-testid="collapsedControl"] {display: none;}
+            footer {display: none;}
+            
+            /* Login container styling */
+            .login-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .login-icon {
+                font-size: 48px;
+                margin-bottom: 0px;
+            }
+            .login-title {
+                color: #1F2937;
+                font-size: 28px;
+                font-weight: 700;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+            .login-subtitle {
+                color: #6B7280;
+                font-size: 15px;
+            }
         </style>
         """,
         unsafe_allow_html=True,
@@ -776,11 +806,75 @@ def render_analytics_tab(
         st.info("No account type chart data available.")
 
 
+def render_login_page() -> bool:
+    """Renders the styled login screen and returns True if authenticated."""
+    
+    # Push content down slightly
+    st.markdown("<div style='height: 5vh;'></div>", unsafe_allow_html=True)
+    
+    # Center the login form using columns
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        # Use a container with a border to act as the card
+        with st.container(border=True):
+            # Inject HTML for exact styling
+            st.markdown("""
+            <div class="login-header">
+                <div class="login-icon">📊</div>
+                <div class="login-title">Welcome Back</div>
+                <div class="login-subtitle">Sign in to access the DTI Analysis Engine</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Input fields
+            username = st.text_input("Username", placeholder="Enter your username", label_visibility="collapsed")
+            
+            # Password field with show/hide toggle
+            pass_col1, pass_col2 = st.columns([4, 1])
+            with pass_col1:
+                # Dynamically change type based on checkbox state, preserving the password value
+                show_pass = st.session_state.get("show_pass", False)
+                pass_type = "default" if show_pass else "password"
+                password = st.text_input("Password", placeholder="Enter your password", type=pass_type, label_visibility="collapsed", key="login_pass")
+            with pass_col2:
+                st.write("") # Spacer for alignment
+                st.checkbox("👁", key="show_pass", help="Show password")
+                
+            # Custom wrapper to identify the button via CSS to make it RED
+            st.markdown('<div class="red-login-btn">', unsafe_allow_html=True)
+            login_clicked = st.button("Sign In", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            if login_clicked:
+                try:
+                    valid_user = st.secrets["auth"]["username"]
+                    valid_pass = st.secrets["auth"]["password"]
+                except (KeyError, AttributeError):
+                    st.error("Authentication secrets are not configured properly on the server.")
+                    return False
+                    
+                if username == valid_user and password == valid_pass:
+                    st.session_state["logged_in"] = True
+                    st.rerun()
+                else:
+                    st.error("Invalid username or password. Please try again.")
+                    
+    return False
+
+
 # =========================================================
 # MAIN APP
 # =========================================================
 def main() -> None:
     inject_custom_css()
+
+    # Authentication Gate
+    if not st.session_state.get("logged_in", False):
+        render_login_page()
+        return
+
+    # Main App Content
     st.title(AppConstants.APP_TITLE)
     st.markdown(AppConstants.APP_SUBTITLE)
 
@@ -789,6 +883,14 @@ def main() -> None:
     # ---------------------------------------------------------
     with st.sidebar:
         st.header("⚙️ Configuration")
+        
+        # Logout Button at top of sidebar
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state["logged_in"] = False
+            st.rerun()
+            
+        st.markdown("---")
+
         uploaded_file = st.file_uploader(
             "📁 Upload Excel File", type=["xlsx", "xls", "xlsm"], key="file_uploader"
         )
