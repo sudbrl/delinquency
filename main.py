@@ -1,17 +1,6 @@
-"""
-Month Condition Analyzer
-========================
-Industry-grade Streamlit application for analyzing loan-account data
-against a user-defined month condition.
-
-Calculation logic, parsing logic, aggregation logic, and Excel output
-structure are preserved exactly from the original implementation; only
-the surrounding engineering (structure, typing, logging, validation,
-error handling, styling, performance, UX) has been upgraded.
-"""
-
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 import sys
@@ -124,6 +113,144 @@ class AnalysisResult:
     total_loan_balance: float = 0.0
     branch_total_count: Dict[str, int] = field(default_factory=dict)
     ac_type_total_count: Dict[str, int] = field(default_factory=dict)
+
+
+# =========================================================
+# AUTHENTICATION & LOGIN UI
+# =========================================================
+LOGIN_CSS = """
+<style>
+/* Hide streamlit default chrome and center the card */
+.stApp { background: linear-gradient(135deg, #1F4E79 0%, #2D5A8C 45%, #6B8FB5 100%) !important; }
+#MainMenu, footer, header {visibility: hidden !important;}
+
+.login-screen .block-container {
+    max-width: 420px !important;
+    padding: 2rem 1rem !important;
+    margin: 0 auto !important;
+    min-height: 90vh;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+/* Glassmorphism Card */
+.login-card {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    border-radius: 22px;
+    padding: 2.5rem 2.25rem 2rem;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    text-align: center;
+}
+.login-icon-wrap {
+    width: 76px; height: 76px; margin: 0 auto 1rem;
+    background: linear-gradient(135deg, #1F4E79, #6B8FB5);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px;
+    box-shadow: 0 12px 28px rgba(31, 78, 121, 0.45);
+}
+.login-title { color: #1F4E79 !important; margin: 0 0 0.35rem 0 !important; font-size: 1.55rem !important; font-weight: 700 !important; }
+.login-subtitle { color: #64748B !important; margin: 0 0 1.5rem 0 !important; font-size: 0.88rem; }
+
+/* Inputs */
+.login-form .stTextInput > div > div > input {
+    background: #F8FAFC; border: 2px solid #E2E8F0 !important; border-radius: 12px !important;
+    padding: 0.8rem 1rem !important; font-size: 0.95rem; transition: all 0.2s;
+}
+.login-form .stTextInput > div > div > input:focus {
+    border-color: #1F4E79 !important; background: white !important; box-shadow: 0 0 0 3px rgba(31, 78, 121, 0.12);
+}
+.login-form .stTextInput > label { color: #334155 !important; font-weight: 600 !important; font-size: 0.85rem !important; }
+
+/* Button */
+.login-form .stButton > button {
+    background: linear-gradient(135deg, #1F4E79, #2D5A8C) !important;
+    color: white !important; border: none !important; border-radius: 12px !important;
+    padding: 0.8rem 1.5rem !important; font-size: 1rem !important; font-weight: 600 !important;
+    width: 100%; box-shadow: 0 6px 14px rgba(31, 78, 121, 0.35); transition: all 0.2s ease;
+}
+.login-form .stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(31, 78, 121, 0.45); }
+
+.login-error {
+    background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FCA5A5;
+    padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.85rem; margin-bottom: 1rem;
+}
+</style>
+"""
+
+def _hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+def _verify_password(provided: str, stored: str) -> bool:
+    """Accepts either a sha256 hex digest or plain-text password."""
+    if not provided or not stored: 
+        return False
+    stored = stored.strip()
+    if len(stored) == 64 and all(c in "0123456789abcdefABCDEF" for c in stored):
+        return _hash_password(provided) == stored.lower()
+    return provided == stored
+
+def _load_users() -> Dict[str, str]:
+    """Reads users dict from Streamlit Cloud Secrets (or local secrets.toml)."""
+    try:
+        users = st.secrets.get("users")
+        if users is None: 
+            return {}
+        return dict(users)
+    except Exception:
+        return {}
+
+def render_login_screen() -> None:
+    st.markdown(LOGIN_CSS, unsafe_allow_html=True)
+    st.markdown('<div class="login-screen">', unsafe_allow_html=True)
+    
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="login-icon-wrap">🔐</div>'
+        '<h2 class="login-title">Month Condition Analyzer</h2>'
+        '<p class="login-subtitle">Secure access — please sign in to continue</p>',
+        unsafe_allow_html=True
+    )
+
+    with st.form("login_form", clear_on_submit=False):
+        st.markdown('<div class="login-form">', unsafe_allow_html=True)
+        username = st.text_input("Username", placeholder="Enter your username", key="login_user")
+        password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_pass")
+        
+        submitted = st.form_submit_button("Sign In", use_container_width=True)
+        
+        if submitted:
+            users = _load_users()
+            if username in users and _verify_password(password, users[username]):
+                st.session_state["authenticated"] = True
+                st.session_state["username"] = username
+                st.rerun()
+            else:
+                st.markdown('<div class="login-error">❌ Invalid username or password. Please try again.</div>', unsafe_allow_html=True)
+                
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def check_authentication() -> bool:
+    """Checks if user is authenticated, renders login screen if not."""
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+        st.session_state["username"] = ""
+        
+    if not st.session_state["authenticated"]:
+        render_login_screen()
+        return False
+    return True
+
+def render_logout_button() -> None:
+    """Renders a logout button in the sidebar."""
+    st.markdown(f"👤 **Logged in as:** `{st.session_state.get('username', 'Unknown')}`")
+    if st.button("Logout", use_container_width=True):
+        st.session_state["authenticated"] = False
+        st.session_state["username"] = ""
+        st.rerun()
 
 
 # =========================================================
@@ -780,6 +907,10 @@ def render_analytics_tab(
 # MAIN APP
 # =========================================================
 def main() -> None:
+    # 1. CHECK AUTHENTICATION
+    if not check_authentication():
+        return
+
     inject_custom_css()
     st.title(AppConstants.APP_TITLE)
     st.markdown(AppConstants.APP_SUBTITLE)
@@ -788,6 +919,10 @@ def main() -> None:
     # SIDEBAR
     # ---------------------------------------------------------
     with st.sidebar:
+        # Render Logout Button at the top of the sidebar
+        render_logout_button()
+        
+        st.markdown("---")
         st.header("⚙️ Configuration")
         uploaded_file = st.file_uploader(
             "📁 Upload Excel File", type=["xlsx", "xls", "xlsm"], key="file_uploader"
