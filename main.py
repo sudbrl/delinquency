@@ -1002,4 +1002,4 @@ if __name__ == "__main__":
     except Exception:
         logger.exception("Unhandled exception in main.")
         st.error("An unexpected error occurred. Please check the logs and try again.")
-```
+
