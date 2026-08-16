@@ -6,7 +6,6 @@ import sys
 from dataclasses import dataclass, field
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Sequence, Tuple
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -132,9 +131,9 @@ section[data-testid="stAppViewContainer"] > div > div {
     background: linear-gradient(135deg, #1F4E79 0%, #2D5A8C 50%, #6B8FB5 100%) !important;
 }
 
-/* Strictly limit the width and height of the login container */
+/* Strictly limit width and prevent vertical stretching */
 section[data-testid="stAppViewContainer"] .block-container {
-    max-width: 380px !important;
+    max-width: 350px !important;
     padding: 1rem !important;
     margin: 0 auto !important;
     flex: none !important;
@@ -144,8 +143,8 @@ section[data-testid="stAppViewContainer"] .block-container {
 .login-card {
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 1.8rem 1.8rem 1.5rem;
+    border-radius: 14px;
+    padding: 1.5rem 1.5rem 1.2rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
     text-align: center;
     width: 100%;
@@ -157,32 +156,35 @@ section[data-testid="stAppViewContainer"] .block-container {
 }
 
 .login-icon-wrap {
-    width: 56px; height: 56px; margin: 0 auto 0.8rem;
+    width: 48px; height: 48px; margin: 0 auto 0.6rem;
     background: linear-gradient(135deg, #1F4E79, #6B8FB5);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
+    font-size: 22px;
     box-shadow: 0 8px 20px rgba(31, 78, 121, 0.4);
 }
 .login-title { 
-    color: #1F4E79 !important; margin: 0 0 0.2rem 0 !important; 
-    font-size: 1.3rem !important; font-weight: 700 !important; 
+    color: #1F4E79 !important; margin: 0 0 0.1rem 0 !important; 
+    font-size: 1.2rem !important; font-weight: 700 !important; 
 }
 .login-subtitle { 
-    color: #64748B !important; margin: 0 0 1.2rem 0 !important; 
-    font-size: 0.8rem; font-weight: 400 !important;
+    color: #64748B !important; margin: 0 0 1rem 0 !important; 
+    font-size: 0.75rem; font-weight: 400 !important;
 }
 
-/* Compact Inputs */
+/* Aggressively reduce vertical gaps in Streamlit inputs */
+.login-form [data-testid="stVerticalBlock"] > div {
+    gap: 0.4rem !important;
+}
 .login-form .stTextInput {
-    padding-bottom: 0.3rem !important;
-    margin-bottom: 0.3rem !important;
+    padding-bottom: 0.1rem !important;
+    margin-bottom: 0.1rem !important;
 }
 .login-form .stTextInput > div > div > input {
     background: #F8FAFC; 
     border: 2px solid #E2E8F0 !important; 
     border-radius: 8px !important;
-    padding: 0.55rem 0.75rem !important; 
+    padding: 0.4rem 0.75rem !important; 
     font-size: 0.85rem; 
     transition: all 0.2s;
 }
@@ -198,15 +200,16 @@ section[data-testid="stAppViewContainer"] .block-container {
 
 /* Compact Button */
 .login-form .stButton {
-    margin-top: 0.4rem !important;
+    margin-top: 0.3rem !important;
     width: 100%;
+    padding-top: 0 !important;
 }
 .login-form .stButton > button {
     background: linear-gradient(135deg, #1F4E79, #2D5A8C) !important;
     color: white !important; border: none !important; 
     border-radius: 8px !important;
-    padding: 0.55rem 1rem !important; 
-    font-size: 0.9rem !important; font-weight: 600 !important;
+    padding: 0.4rem 1rem !important; 
+    font-size: 0.85rem !important; font-weight: 600 !important;
     width: 100%; 
     box-shadow: 0 4px 10px rgba(31, 78, 121, 0.3); 
     transition: all 0.2s ease;
@@ -219,8 +222,8 @@ section[data-testid="stAppViewContainer"] .block-container {
 .login-error {
     background-color: #FEF2F2; color: #B91C1C; 
     border: 1px solid #FCA5A5;
-    padding: 0.5rem 0.75rem; border-radius: 8px; 
-    font-size: 0.75rem; margin-bottom: 0.8rem; text-align: left;
+    padding: 0.4rem 0.75rem; border-radius: 8px; 
+    font-size: 0.75rem; margin-bottom: 0.5rem; text-align: left;
 }
 </style>
 """
