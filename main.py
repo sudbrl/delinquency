@@ -6,6 +6,7 @@ import sys
 from dataclasses import dataclass, field
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -114,11 +115,11 @@ class AnalysisResult:
 
 
 # =========================================================
-# AUTHENTICATION & SECURE LOGIN UI
+# AUTHENTICATION & SECURE COMPACT LOGIN UI
 # =========================================================
 LOGIN_CSS = """
 <style>
-/* Hide Streamlit default chrome to prevent layout disruption */
+/* Hide Streamlit default chrome */
 #MainMenu, footer, header {visibility: hidden !important;}
 
 /* Center the login card vertically and horizontally */
@@ -131,55 +132,58 @@ section[data-testid="stAppViewContainer"] > div > div {
     background: linear-gradient(135deg, #1F4E79 0%, #2D5A8C 50%, #6B8FB5 100%) !important;
 }
 
-/* Strictly limit the width of the login container */
+/* Strictly limit the width and height of the login container */
 section[data-testid="stAppViewContainer"] .block-container {
-    max-width: 400px !important;
-    padding: 2rem 1rem !important;
+    max-width: 380px !important;
+    padding: 1rem !important;
     margin: 0 auto !important;
     flex: none !important;
 }
 
-/* Glassmorphism Card */
+/* Compact Glassmorphism Card */
 .login-card {
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 18px;
-    padding: 2.5rem 2.2rem;
+    border-radius: 16px;
+    padding: 1.8rem 1.8rem 1.5rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
     text-align: center;
     width: 100%;
-    animation: fadeIn 0.6s ease-out;
+    animation: fadeIn 0.5s ease-out;
 }
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .login-icon-wrap {
-    width: 68px; height: 68px; margin: 0 auto 1.2rem;
+    width: 56px; height: 56px; margin: 0 auto 0.8rem;
     background: linear-gradient(135deg, #1F4E79, #6B8FB5);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 30px;
-    box-shadow: 0 10px 25px rgba(31, 78, 121, 0.4);
+    font-size: 26px;
+    box-shadow: 0 8px 20px rgba(31, 78, 121, 0.4);
 }
 .login-title { 
-    color: #1F4E79 !important; margin: 0 0 0.3rem 0 !important; 
-    font-size: 1.4rem !important; font-weight: 700 !important; 
+    color: #1F4E79 !important; margin: 0 0 0.2rem 0 !important; 
+    font-size: 1.3rem !important; font-weight: 700 !important; 
 }
 .login-subtitle { 
-    color: #64748B !important; margin: 0 0 1.5rem 0 !important; 
-    font-size: 0.85rem; font-weight: 400 !important;
+    color: #64748B !important; margin: 0 0 1.2rem 0 !important; 
+    font-size: 0.8rem; font-weight: 400 !important;
 }
 
-/* Inputs */
+/* Compact Inputs */
+.login-form .stTextInput {
+    padding-bottom: 0.3rem !important;
+    margin-bottom: 0.3rem !important;
+}
 .login-form .stTextInput > div > div > input {
     background: #F8FAFC; 
     border: 2px solid #E2E8F0 !important; 
-    border-radius: 10px !important;
-    padding: 0.7rem 0.9rem !important; 
-    font-size: 0.9rem; 
+    border-radius: 8px !important;
+    padding: 0.55rem 0.75rem !important; 
+    font-size: 0.85rem; 
     transition: all 0.2s;
 }
 .login-form .stTextInput > div > div > input:focus {
@@ -189,31 +193,34 @@ section[data-testid="stAppViewContainer"] .block-container {
 }
 .login-form .stTextInput > label { 
     color: #334155 !important; font-weight: 600 !important; 
-    font-size: 0.8rem !important; margin-bottom: 0.2rem !important;
+    font-size: 0.75rem !important; margin-bottom: 0.1rem !important;
 }
 
-/* Button */
+/* Compact Button */
+.login-form .stButton {
+    margin-top: 0.4rem !important;
+    width: 100%;
+}
 .login-form .stButton > button {
     background: linear-gradient(135deg, #1F4E79, #2D5A8C) !important;
     color: white !important; border: none !important; 
-    border-radius: 10px !important;
-    padding: 0.7rem 1.2rem !important; 
-    font-size: 0.95rem !important; font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 0.55rem 1rem !important; 
+    font-size: 0.9rem !important; font-weight: 600 !important;
     width: 100%; 
-    box-shadow: 0 5px 12px rgba(31, 78, 121, 0.3); 
+    box-shadow: 0 4px 10px rgba(31, 78, 121, 0.3); 
     transition: all 0.2s ease;
-    margin-top: 0.5rem !important;
 }
 .login-form .stButton > button:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 8px 18px rgba(31, 78, 121, 0.4); 
+    transform: translateY(-1px); 
+    box-shadow: 0 6px 15px rgba(31, 78, 121, 0.4); 
 }
 
 .login-error {
     background-color: #FEF2F2; color: #B91C1C; 
     border: 1px solid #FCA5A5;
-    padding: 0.6rem 0.9rem; border-radius: 8px; 
-    font-size: 0.8rem; margin-bottom: 1rem; text-align: left;
+    padding: 0.5rem 0.75rem; border-radius: 8px; 
+    font-size: 0.75rem; margin-bottom: 0.8rem; text-align: left;
 }
 </style>
 """
@@ -238,7 +245,7 @@ def _load_users() -> Dict[str, str]:
             return {}
         return dict(users)
     except Exception:
-        return []
+        return {}
 
 def render_login_screen() -> None:
     st.markdown(LOGIN_CSS, unsafe_allow_html=True)
@@ -1002,4 +1009,3 @@ if __name__ == "__main__":
     except Exception:
         logger.exception("Unhandled exception in main.")
         st.error("An unexpected error occurred. Please check the logs and try again.")
-
